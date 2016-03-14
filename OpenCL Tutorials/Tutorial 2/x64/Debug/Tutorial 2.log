@@ -1,0 +1,30 @@
+﻿Build started 14/03/2016 11:51:32.
+     1>Project "C:\Users\Computing\Downloads\OpenCL Tutorials - Tutorial 3\OpenCL Tutorials\Tutorial 2\Tutorial 2.vcxproj" on node 3 (Rebuild target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /I"C:\Program Files (x86)\Intel\OpenCL SDK\5.3\include" /I.\Graphics\include\win32 /I.\Graphics\lodepng /Zi /nologo /W3 /WX- /Od /D __x86_64 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"x64\Debug\\" /Fd"x64\Debug\vc140.pdb" /Gd /TP /errorReport:prompt Graphics\lodepng\lodepng.cpp "Tutorial 2.cpp"
+         Tutorial 2.cpp
+         lodepng.cpp
+     1>Graphics\lodepng\lodepng.cpp(762): warning C4334: '<<': result of 32-bit shift implicitly converted to 64 bits (was 64-bit shift intended?)
+     1>Graphics\lodepng\lodepng.cpp(1422): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+     1>Graphics\lodepng\lodepng.cpp(1426): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+     1>Graphics\lodepng\lodepng.cpp(1498): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+     1>Graphics\lodepng\lodepng.cpp(3455): warning C4267: 'argument': conversion from 'size_t' to 'unsigned int', possible loss of data
+     1>Graphics\lodepng\lodepng.cpp(4262): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+     1>Graphics\lodepng\lodepng.cpp(4310): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+     1>Graphics\lodepng\lodepng.cpp(4390): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+     1>Graphics\lodepng\lodepng.cpp(5329): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned int', possible loss of data
+         Generating Code...
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Computing\Downloads\OpenCL Tutorials - Tutorial 3\OpenCL Tutorials\x64\Debug\Tutorial 2.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files (x86)\Intel\OpenCL SDK\5.3\lib\x64" /LIBPATH:.\Graphics\lib\win64\glut OpenCL.lib glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /Debug /PDB:"C:\Users\Computing\Downloads\OpenCL Tutorials - Tutorial 3\OpenCL Tutorials\x64\Debug\Tutorial 2.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Computing\Downloads\OpenCL Tutorials - Tutorial 3\OpenCL Tutorials\x64\Debug\Tutorial 2.lib" /MACHINE:X64 x64\Debug\lodepng.obj
+         "x64\Debug\Tutorial 2.obj"
+         Tutorial 2.vcxproj -> C:\Users\Computing\Downloads\OpenCL Tutorials - Tutorial 3\OpenCL Tutorials\x64\Debug\Tutorial 2.exe
+       PostBuildEvent:
+         If exist "*.cl" copy "*.cl" "C:\Users\Computing\Downloads\OpenCL Tutorials - Tutorial 3\OpenCL Tutorials\x64\Debug\\"
+         :VCEnd
+         my_kernels2.cl
+                 1 file(s) copied.
+     1>Done Building Project "C:\Users\Computing\Downloads\OpenCL Tutorials - Tutorial 3\OpenCL Tutorials\Tutorial 2\Tutorial 2.vcxproj" (Rebuild target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:01.73
