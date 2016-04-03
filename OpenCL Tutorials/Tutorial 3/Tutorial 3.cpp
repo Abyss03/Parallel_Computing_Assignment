@@ -69,19 +69,33 @@ int main(int argc, char **argv) {
 		//host - input
 		//std::vector<mytype> A(10, 1);//allocate 10 elements with an initial value 1 - their sum is 10 so it should be easy to check the results!
 
-		ifstream file;
-		file.open("temp_lincolnshire.txt");
-		// opening file
-		stringstream sStream;
-		sStream << file.rdbuf();
-		string wholeData = sStream.str();
+		std::vector<mytype> A;
+		string fileName = "temp_lincolnshire_short.txt";
+		std::ifstream file;
+		file.open(fileName);
+		string line;
+
+		while (getline(file, line)) // checking for lines below / unread lines
+		{
+			std::istringstream iss(line);
+
+			string loc;
+			string year;
+			string month;
+			string day;
+			string time;
+			double temp;
+
+			iss >> loc >> year >> month >> day >> time >> temp;
+			A.push_back(temp * 10);
+		}
 
 		file.close();
 
-		std::cout << wholeData;
-
-		std::vector<int> A = { 0,1,2,3,4,5,6,7,8,9 };
-		std::vector<int> B = { 0,1,2,3,4,5,6,7,8,9 };
+		int aSize = A.size();
+		std::vector<mytype> B(aSize);
+		std::vector<mytype> C(aSize);
+		std::vector<mytype> D(aSize);
 
 		//the following part adjusts the length of the input vector so it can be run for a specific workgroup size
 		//if the total input length is divisible by the workgroup size
@@ -110,27 +124,49 @@ int main(int argc, char **argv) {
 		//device - buffers
 		cl::Buffer buffer_A(context, CL_MEM_READ_ONLY, input_size);
 		cl::Buffer buffer_B(context, CL_MEM_READ_WRITE, output_size);
+		cl::Buffer buffer_C(context, CL_MEM_READ_WRITE, output_size);
+		cl::Buffer buffer_D(context, CL_MEM_READ_WRITE, output_size);
 
 		//Part 5 - device operations
 
 		//5.1 copy array A to and initialise other arrays on device memory
 		queue.enqueueWriteBuffer(buffer_A, CL_TRUE, 0, input_size, &A[0]);
 		queue.enqueueFillBuffer(buffer_B, 0, 0, output_size);//zero B buffer on device memory
+		queue.enqueueFillBuffer(buffer_C, 0, 0, output_size);//zero B buffer on device memory
+		queue.enqueueFillBuffer(buffer_D, 0, 0, output_size);//zero B buffer on device memory
 
 		//5.2 Setup and execute all kernels (i.e. device code)
-		cl::Kernel kernel_1 = cl::Kernel(program, "reduce_add_1");
+		cl::Kernel kernel_1 = cl::Kernel(program, "reduce_max");
 		kernel_1.setArg(0, buffer_A);
 		kernel_1.setArg(1, buffer_B);
-//		kernel_1.setArg(2, cl::Local(local_size*sizeof(mytype)));//local memory size
+		kernel_1.setArg(2, cl::Local(local_size*sizeof(mytype)));//local memory size
+
+		cl::Kernel kernel_2 = cl::Kernel(program, "reduce_min");
+		kernel_2.setArg(0, buffer_A);
+		kernel_2.setArg(1, buffer_C);
+		kernel_2.setArg(2, cl::Local(local_size*sizeof(mytype)));//local memory size
+
+		cl::Kernel kernel_3 = cl::Kernel(program, "reduce_mean");
+		kernel_3.setArg(0, buffer_A);
+		kernel_3.setArg(1, buffer_D);
+		kernel_3.setArg(2, cl::Local(local_size*sizeof(mytype)));//local memory size
 
 		//call all kernels in a sequence
 		queue.enqueueNDRangeKernel(kernel_1, cl::NullRange, cl::NDRange(input_elements), cl::NDRange(local_size));
+		queue.enqueueNDRangeKernel(kernel_2, cl::NullRange, cl::NDRange(input_elements), cl::NDRange(local_size));
+		queue.enqueueNDRangeKernel(kernel_3, cl::NullRange, cl::NDRange(input_elements), cl::NDRange(local_size));
 
 		//5.3 Copy the result from device to host
 		queue.enqueueReadBuffer(buffer_B, CL_TRUE, 0, output_size, &B[0]);
+		queue.enqueueReadBuffer(buffer_C, CL_TRUE, 0, output_size, &C[0]);
+		queue.enqueueReadBuffer(buffer_D, CL_TRUE, 0, output_size, &D[0]);
 
-		std::cout << "A = " << A << std::endl;
-		std::cout << "B = " << B << std::endl;
+		float mean = (((float)D[0] / 10) / aSize);
+
+		//std::cout << "A = " << A << std::endl;
+		std::cout << "Max = " <<  ((float) B[0] / 10) << std::endl;
+		std::cout << "Min = " << ((float)C[0] / 10) << std::endl;
+		std::cout << "Mean = " << mean << std::endl;
 	}
 	catch (cl::Error err) {
 		std::cerr << "ERROR: " << err.what() << ", " << getErrorString(err.err()) << std::endl;
