@@ -92,11 +92,21 @@ __kernel void reduce_mean(__global const int* A, __global int* B, __local int* s
 
 
 //a very simple histogram implementation
-__kernel void hist_simple(__global const int* A, __global int* H) { 
+__kernel void hist_simple(__global const int* A, __global int* H, int diff, int min, int binSize, __local int* scratch) { 
+
 	int id = get_global_id(0);
+	int lid = get_local_id(0);
+	int N = get_local_size(0);
+
+	scratch[lid] = A[id];
+
+	barrier(CLK_LOCAL_MEM_FENCE);
+
+	int binWidth =  diff / binSize;
 
 	//assumes that H has been initialised to 0
-	int bin_index = A[id];//take value as a bin index
+	int bin_index = (scratch[lid] + min) / binWidth; //take value as a bin index
 
 	atomic_inc(&H[bin_index]);//serial operation, not very efficient!
+	barrier(CLK_LOCAL_MEM_FENCE);
 }

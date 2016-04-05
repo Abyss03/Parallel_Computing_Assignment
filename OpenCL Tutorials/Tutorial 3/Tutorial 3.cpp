@@ -9,7 +9,9 @@
 #else
 #include <CL/cl.hpp>
 #endif
-
+#include <string>
+#include <sstream>
+#include <cmath>
 #include "Utils.h"
 
 void print_help() {
@@ -85,24 +87,35 @@ int main(int argc, char **argv) {
 			string month;
 			string day;
 			string time;
-			double temp;
-
+			float temp;
 			iss >> loc >> year >> month >> day >> time >> temp;
 			A.push_back(temp * 10);
 		}
 
 		file.close();
 
+		std::cout << "File Size: " << A.size() << endl;
+
+		string userNum;
+
+		std::cout << "Please enter the number of Bins for the Histogram" << std::endl;
+
+		std::getline(cin, userNum);
+
+		int convert2Num = stoi(userNum);
+
+		std::cout << "You Entered: " << convert2Num << endl;
+
 		int aSize = A.size();
 		std::vector<mytype> B(aSize);
 		std::vector<mytype> C(aSize);
 		std::vector<mytype> D(aSize);
-		std::vector<mytype> H(aSize);
+		std::vector<mytype> H(convert2Num);
 
 		//the following part adjusts the length of the input vector so it can be run for a specific workgroup size
 		//if the total input length is divisible by the workgroup size
 		//this makes the code more efficient
-		size_t local_size = 10;
+		size_t local_size = 32;
 
 		size_t padding_size = A.size() % local_size;
 
@@ -122,13 +135,14 @@ int main(int argc, char **argv) {
 		//host - output
 		//std::vector<mytype> B(input_elements);
 		size_t output_size = B.size()*sizeof(mytype);//size in bytes
+		size_t hist_size = H.size()*sizeof(mytype);
 
 		//device - buffers
 		cl::Buffer buffer_A(context, CL_MEM_READ_ONLY, input_size);
 		cl::Buffer buffer_B(context, CL_MEM_READ_WRITE, output_size);
 		cl::Buffer buffer_C(context, CL_MEM_READ_WRITE, output_size);
 		cl::Buffer buffer_D(context, CL_MEM_READ_WRITE, output_size);
-		cl::Buffer buffer_H(context, CL_MEM_READ_WRITE, output_size);
+		cl::Buffer buffer_H(context, CL_MEM_READ_WRITE, hist_size);
 
 		//Part 5 - device operations
 
@@ -137,7 +151,7 @@ int main(int argc, char **argv) {
 		queue.enqueueFillBuffer(buffer_B, 0, 0, output_size);//zero B buffer on device memory
 		queue.enqueueFillBuffer(buffer_C, 0, 0, output_size);//zero C buffer on device memory
 		queue.enqueueFillBuffer(buffer_D, 0, 0, output_size);//zero D buffer on device memory
-		queue.enqueueFillBuffer(buffer_H, 0, 0, output_size);//zero D buffer on device memory
+
 
 		//5.2 Setup and execute all kernels (i.e. device code)
 		cl::Kernel kernel_1 = cl::Kernel(program, "reduce_max"); // Max Passing Values
@@ -155,26 +169,42 @@ int main(int argc, char **argv) {
 		kernel_3.setArg(1, buffer_D);
 		kernel_3.setArg(2, cl::Local(local_size*sizeof(mytype)));//local memory size
 
-		cl::Kernel kernel_4 = cl::Kernel(program, "hist_simple"); // Mean Passing Values
-		kernel_4.setArg(0, buffer_A);
-		kernel_4.setArg(1, buffer_H);
-		//kernel_3.setArg(2, cl::Local(local_size*sizeof(mytype)));//local memory size
-
 		//call all kernels in a sequence
 		queue.enqueueNDRangeKernel(kernel_1, cl::NullRange, cl::NDRange(input_elements), cl::NDRange(local_size)); // Max
 		queue.enqueueNDRangeKernel(kernel_2, cl::NullRange, cl::NDRange(input_elements), cl::NDRange(local_size)); // Min
 		queue.enqueueNDRangeKernel(kernel_3, cl::NullRange, cl::NDRange(input_elements), cl::NDRange(local_size)); // Mean
-		queue.enqueueNDRangeKernel(kernel_4, cl::NullRange, cl::NDRange(input_elements), cl::NDRange(local_size)); // Mean
+
 
 		//5.3 Copy the result from device to host
 		queue.enqueueReadBuffer(buffer_B, CL_TRUE, 0, output_size, &B[0]);
 		queue.enqueueReadBuffer(buffer_C, CL_TRUE, 0, output_size, &C[0]);
 		queue.enqueueReadBuffer(buffer_D, CL_TRUE, 0, output_size, &D[0]);
-		queue.enqueueReadBuffer(buffer_H, CL_TRUE, 0, output_size, &H[0]);
+
+// HISTOGRAM
+		
+		queue.enqueueFillBuffer(buffer_H, 0, 0, hist_size);//zero H buffer on device memory
+
+		int diff = (B[0]/10) - (C[0]/10);
+		int min = pow((C[0]/10),2);
+		min = sqrt(min);
+
+		std::cout << diff << endl;
+		std::cout << min << endl;
+
+		cl::Kernel kernel_4 = cl::Kernel(program, "hist_simple"); // Hist Passing Values
+		kernel_4.setArg(0, buffer_A);
+		kernel_4.setArg(1, buffer_H);
+		kernel_4.setArg(2, diff);
+		kernel_4.setArg(3, min);
+		kernel_4.setArg(4, convert2Num);
+		kernel_4.setArg(5, cl::Local(local_size*sizeof(mytype)));//local memory size
+
+		queue.enqueueNDRangeKernel(kernel_4, cl::NullRange, cl::NDRange(input_elements), cl::NDRange(local_size)); // Hist
+
+		queue.enqueueReadBuffer(buffer_H, CL_TRUE, 0, hist_size, &H[0]);
 
 		float mean = (((float)D[0] / 10) / aSize);
 
-		//std::cout << "A = " << A << std::endl;
 		std::cout << "Max = " <<  ((float) B[0] / 10) << std::endl;
 		std::cout << "Min = " << ((float)C[0] / 10) << std::endl;
 		std::cout << "Mean = " << mean << std::endl;
