@@ -73,7 +73,31 @@ int main(int argc, char **argv) {
 
 		std::vector<mytype> A;
 
-		string fileName = "temp_lincolnshire_short.txt";
+		string fileNameShort = "temp_lincolnshire_short.txt";
+		string fileNameLong = "temp_lincolnshire.txt";
+
+		string fileSelect;
+
+		std::cout << "Press 1 for short file and 2 for full file" << endl;
+
+		std::getline(cin, fileSelect);
+
+		string fileName;
+
+		if (fileSelect == "1")
+		{
+			fileName = fileNameShort;
+		}
+		else if (fileSelect == "2")
+		{
+			fileName = fileNameLong;
+		}
+		else
+		{
+			std::cout << "Error, value incorrect";
+			return 0;
+		}
+
 		std::ifstream file;
 		file.open(fileName);
 		string line;
