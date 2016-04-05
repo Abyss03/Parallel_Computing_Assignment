@@ -184,8 +184,8 @@ int main(int argc, char **argv) {
 		
 		queue.enqueueFillBuffer(buffer_H, 0, 0, hist_size);//zero H buffer on device memory
 
-		int diff = (B[0]/10) - (C[0]/10);
-		int min = pow((C[0]/10),2);
+		int diff = (B[0]) - (C[0]);
+		int min = pow((C[0]),2);
 		min = sqrt(min);
 
 		std::cout << diff << endl;
