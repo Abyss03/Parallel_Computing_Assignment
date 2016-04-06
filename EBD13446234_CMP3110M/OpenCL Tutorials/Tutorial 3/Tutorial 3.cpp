@@ -130,10 +130,12 @@ int main(int argc, char **argv) {
 
 		std::cout << "You Entered: " << convert2Num << endl;
 
-		int aSize = A.size();
+		// Innitiates all of the vectors to be the size of the amount of input elements
+		int aSize = A.size(); 
 		std::vector<mytype> B(aSize);
 		std::vector<mytype> C(aSize);
 		std::vector<mytype> D(aSize);
+		// Innitiates vector to user specified size
 		std::vector<mytype> H(convert2Num);
 
 		//the following part adjusts the length of the input vector so it can be run for a specific workgroup size
@@ -172,23 +174,23 @@ int main(int argc, char **argv) {
 
 		//5.1 copy array A to and initialise other arrays on device memory
 		queue.enqueueWriteBuffer(buffer_A, CL_TRUE, 0, input_size, &A[0]);
-		queue.enqueueFillBuffer(buffer_B, 0, 0, output_size);//zero B buffer on device memory
-		queue.enqueueFillBuffer(buffer_C, 0, 0, output_size);//zero C buffer on device memory
-		queue.enqueueFillBuffer(buffer_D, 0, 0, output_size);//zero D buffer on device memory
+		queue.enqueueFillBuffer(buffer_B, 0, 0, output_size); //zero B buffer on device memory
+		queue.enqueueFillBuffer(buffer_C, 0, 0, output_size); //zero C buffer on device memory
+		queue.enqueueFillBuffer(buffer_D, 0, 0, output_size); //zero D buffer on device memory
 
 
 		//5.2 Setup and execute all kernels (i.e. device code)
-		cl::Kernel kernel_1 = cl::Kernel(program, "reduce_max"); // Max Passing Values
+		cl::Kernel kernel_1 = cl::Kernel(program, "reduce_max"); // Passing values to max kernel
 		kernel_1.setArg(0, buffer_A);
 		kernel_1.setArg(1, buffer_B);
 		kernel_1.setArg(2, cl::Local(local_size*sizeof(mytype)));//local memory size
 
-		cl::Kernel kernel_2 = cl::Kernel(program, "reduce_min"); // Min Passing Values
+		cl::Kernel kernel_2 = cl::Kernel(program, "reduce_min"); // Passing values to Min kernel
 		kernel_2.setArg(0, buffer_A);
 		kernel_2.setArg(1, buffer_C);
 		kernel_2.setArg(2, cl::Local(local_size*sizeof(mytype)));//local memory size
 
-		cl::Kernel kernel_3 = cl::Kernel(program, "reduce_mean"); // Mean Passing Values
+		cl::Kernel kernel_3 = cl::Kernel(program, "reduce_mean"); // Passing values to Mean kernel
 		kernel_3.setArg(0, buffer_A);
 		kernel_3.setArg(1, buffer_D);
 		kernel_3.setArg(2, cl::Local(local_size*sizeof(mytype)));//local memory size
@@ -204,12 +206,12 @@ int main(int argc, char **argv) {
 		queue.enqueueReadBuffer(buffer_C, CL_TRUE, 0, output_size, &C[0]);
 		queue.enqueueReadBuffer(buffer_D, CL_TRUE, 0, output_size, &D[0]);
 
-// HISTOGRAM
+// -------------------------------------- HISTOGRAM --------------------------------------
 		
 		queue.enqueueFillBuffer(buffer_H, 0, 0, hist_size);//zero H buffer on device memory
 
 		int diff = (B[0]) - (C[0]);
-		int min = pow((C[0]),2);
+		int min = pow((C[0]),2); // Square and then Square root the minimum value to ensure it is not a negative value
 		min = sqrt(min);
 
 		std::cout << diff << endl;
@@ -227,12 +229,14 @@ int main(int argc, char **argv) {
 
 		queue.enqueueReadBuffer(buffer_H, CL_TRUE, 0, hist_size, &H[0]);
 
-		float mean = (((float)D[0] / 10) / aSize);
+// -------------------------------------- WRITING VALUES --------------------------------------
 
-		std::cout << "Max = " <<  ((float) B[0] / 10) << std::endl;
-		std::cout << "Min = " << ((float)C[0] / 10) << std::endl;
-		std::cout << "Mean = " << mean << std::endl;
-		std::cout << "Hist = " << H << std::endl;
+		float mean = (((float)D[0] / 10) / aSize); // D (Sum of all values) is divided by aSize (Number of values) to get the mean value
+
+		std::cout << "Max = " <<  ((float) B[0] / 10) << std::endl; // writing out max value
+		std::cout << "Min = " << ((float)C[0] / 10) << std::endl; // writing out min value
+		std::cout << "Mean = " << mean << std::endl; // writing out mean value
+		std::cout << "Hist = " << H << std::endl; // writing out histogram
 	}
 	catch (cl::Error err) {
 		std::cerr << "ERROR: " << err.what() << ", " << getErrorString(err.err()) << std::endl;

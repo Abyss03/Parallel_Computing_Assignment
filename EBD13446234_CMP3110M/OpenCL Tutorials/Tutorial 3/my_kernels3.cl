@@ -102,7 +102,7 @@ __kernel void hist_simple(__global const int* A, __global int* H, int diff, int 
 
 	barrier(CLK_LOCAL_MEM_FENCE);
 
-	int binWidth =  diff / binSize;
+	int binWidth =  diff / binSize; //finds width for each bin by taking the difference and dividing it by the number of bins
 
 	//assumes that H has been initialised to 0
 	int bin_index = (scratch[lid] + min) / binWidth; //take value as a bin index
